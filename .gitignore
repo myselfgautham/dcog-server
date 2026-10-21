@@ -5,3 +5,6 @@ Cargo.lock
 # JetBrains and vs-code
 .idea/
 .vscode/
+
+# environment files
+.env
