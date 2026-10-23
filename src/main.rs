@@ -1,4 +1,9 @@
-use axum::routing::get;
+// modules in project-scope
+mod auth;
+
+// routers to be nested into the main router
+use auth::router::auth_router;
+
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 
@@ -64,8 +69,8 @@ async fn main() {
 // builds the application router
 fn build_app(app_state: AppState) -> axum::Router {
     axum::Router::new()
-        // TODO: replace; hello, world route for testing
-        .route("/", get(|| async { "Hello, World!" }))
+        // attach the auth routes with prefix /api/auth
+        .nest("/api/auth/", auth_router())
         // hoist global state for all requests
         .with_state(app_state)
 }
