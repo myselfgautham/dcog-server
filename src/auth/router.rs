@@ -1,5 +1,5 @@
 use crate::AppState;
-use crate::auth::handlers::login::login;
+use crate::auth::handlers::email_login::login;
 use axum::Router;
 use axum::routing::post;
 
