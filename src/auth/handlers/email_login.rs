@@ -1,12 +1,15 @@
 use axum::Json;
 use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum_extra::extract::CookieJar;
+use axum_extra::extract::cookie::{Cookie, SameSite};
 use jsonwebtoken::{EncodingKey, Header, encode};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::time::SystemTime;
 
 // handler accepts the payload directly using Axum's extractors
-pub async fn login(Json(payload): Json<LoginRequest>) -> Result<Json<LoginResponse>, StatusCode> {
+pub async fn login(cookie_jar: CookieJar, Json(payload): Json<LoginRequest>) -> impl IntoResponse {
     // TODO: Add database verification
     if payload.email != "someone@example.com" || payload.password != "password123" {
         return Err(StatusCode::UNAUTHORIZED);
@@ -23,7 +26,7 @@ pub async fn login(Json(payload): Json<LoginRequest>) -> Result<Json<LoginRespon
         + 3600; // 3600 seconds = 1 hour
 
     // define the claims for the token
-    let claims = Claims {
+    let claims = JwtClaims {
         sub: payload.email,
         exp: expiration as usize,
     };
@@ -36,11 +39,16 @@ pub async fn login(Json(payload): Json<LoginRequest>) -> Result<Json<LoginRespon
     )
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    // return the response as JSON
-    Ok(Json(LoginResponse {
-        access_token: token,
-        token_type: String::from("Bearer"),
-    }))
+    // build the HTTP-only cookie
+    let cookie = Cookie::build(("session_token", token))
+        .http_only(true) // prevents client-side JS from accessing the cookie
+        .secure(true) // ensures it is only sent over HTTPS
+        .same_site(SameSite::Strict)
+        .path("/")
+        .build();
+
+    // add the cookie to jar and return it along with response tuple
+    Ok((cookie_jar.add(cookie), "logged in successfully!"))
 }
 
 // struct representing the incoming request body
@@ -50,16 +58,9 @@ pub struct LoginRequest {
     password: String,
 }
 
-// struct representing the JSON response body
-#[derive(Serialize)]
-pub struct LoginResponse {
-    access_token: String,
-    token_type: String,
-}
-
 // claims that will be encoded inside the JWT
 #[derive(Serialize)]
-pub struct Claims {
+pub struct JwtClaims {
     sub: String, // subject (usually email)
     exp: usize,  // expiration timestamp
 }
