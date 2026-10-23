@@ -5,6 +5,6 @@ use axum::routing::post;
 
 pub fn auth_router() -> Router<AppState> {
     Router::new()
-        // login route that validates credentials and returns a JWT
+        // login route that returns an HTTP-only cookie
         .route("/login/email", post(email_login))
 }

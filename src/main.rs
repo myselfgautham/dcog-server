@@ -69,7 +69,7 @@ async fn main() {
 // builds the application router
 fn build_app(app_state: AppState) -> axum::Router {
     axum::Router::new()
-        // attach the auth routes with prefix /api/auth
+        // attach the auth routes with prefix /api/auth/
         .nest("/api/auth/", auth_router())
         // hoist global state for all requests
         .with_state(app_state)
