@@ -9,7 +9,10 @@ use std::env;
 use std::time::SystemTime;
 
 // handler accepts the payload directly using Axum's extractors
-pub async fn login(cookie_jar: CookieJar, Json(payload): Json<LoginRequest>) -> impl IntoResponse {
+pub async fn email_login(
+    cookie_jar: CookieJar,
+    Json(payload): Json<LoginRequest>,
+) -> impl IntoResponse {
     // TODO: Add database verification
     if payload.email != "someone@example.com" || payload.password != "password123" {
         return Err(StatusCode::UNAUTHORIZED);
