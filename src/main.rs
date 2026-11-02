@@ -4,8 +4,10 @@ mod auth;
 // routers to be nested into the main router
 use auth::router::auth_router;
 
+use axum::http::HeaderValue;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
+use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() {
@@ -73,6 +75,44 @@ fn build_app(app_state: AppState) -> axum::Router {
         .nest("/api/auth/", auth_router())
         // hoist global state for all requests
         .with_state(app_state)
+        // attach the cors layer to the router
+        .layer(cors_layer())
+}
+
+// builds the cors layer
+fn cors_layer() -> CorsLayer {
+    // fetch the environment variable for allowed origins
+    let origins = std::env::var("CORS_ALLOWED_ORIGINS").expect("CORS_ALLOWED_ORIGINS must be set.");
+
+    // parse the allowed origins into a vector
+    let allowed_origins: Vec<HeaderValue> = origins
+        .split(",")
+        .map(str::trim)
+        // only retain strings with actual data
+        .filter(|origin| !origin.is_empty())
+        // parse each string to a HeaderValue to be given to the CorsLayer
+        .map(|origin| origin.parse::<HeaderValue>().expect("Invalid CORS origin"))
+        .collect();
+
+    // create a new CorsLayer which is returned by default
+    CorsLayer::new()
+        // allow the previously parsed origins
+        .allow_origin(allowed_origins)
+        // explicitly allow credential transfer
+        .allow_credentials(true)
+        // set the allowed methods for the specified routes
+        .allow_methods([
+            axum::http::Method::GET,
+            axum::http::Method::POST,
+            axum::http::Method::PATCH,
+            axum::http::Method::DELETE,
+            axum::http::Method::OPTIONS,
+        ])
+        // set the allowed headers for the specified routes
+        .allow_headers([
+            axum::http::header::CONTENT_TYPE,
+            axum::http::header::AUTHORIZATION,
+        ])
 }
 
 // global application state
