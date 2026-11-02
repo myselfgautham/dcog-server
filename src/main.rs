@@ -82,7 +82,7 @@ fn build_app(app_state: AppState) -> axum::Router {
 // builds the cors layer
 fn cors_layer() -> CorsLayer {
     // fetch the environment variable for allowed origins
-    let origins = std::env::var("CORS_ALLOWED_ORIGINS").expect("CORS_ALLOWED_ORIGINS must be set.");
+    let origins = env::var("CORS_ALLOWED_ORIGINS").expect("CORS_ALLOWED_ORIGINS must be set.");
 
     // parse the allowed origins into a vector
     let allowed_origins: Vec<HeaderValue> = origins
