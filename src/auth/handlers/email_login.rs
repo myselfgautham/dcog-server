@@ -51,7 +51,7 @@ pub async fn email_login(
         .build();
 
     // add the cookie to jar and return it along with response tuple
-    Ok((cookie_jar.add(cookie), "logged in successfully!"))
+    Ok((cookie_jar.add(cookie), "Logged in successfully!"))
 }
 
 // struct representing the incoming request body
